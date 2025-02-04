@@ -3,136 +3,213 @@ import { useState } from 'react';
 const ComplaintForm = () => {
   const [formData, setFormData] = useState({
     name: '',
-    phoneNumber: '',
-    sendingNumber: '',
-    description: ''
+    customerPaymentNumber: '',
+    companyPaymentNumber: '',
+    contactNumber: '',
+    subject: '',
+    details: '',
+    attachments: []
   });
 
-  const [errors, setErrors] = useState({
-    phoneNumber: '',
-    sendingNumber: ''
-  });
+  const [errors, setErrors] = useState({});
 
-  const validatePhoneNumber = (number, field) => {
-    if (number && !/^\d{11}$/.test(number)) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: 'Phone number must be exactly 11 digits'
-      }));
-      return false;
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'name':
+        return value.length < 2 && value.length > 0 ? 'Name must be at least 2 characters' : '';
+      case 'contactNumber':
+        return value && !/^01\d{9}$/.test(value) ? 'Enter valid 11-digit number starting with 01' : '';
+      case 'customerPaymentNumber':
+      case 'companyPaymentNumber':
+        return value && !/^01\d{9}$/.test(value) ? 'Enter valid 11-digit number starting with 01' : '';
+      case 'subject':
+        return value.length < 3 && value.length > 0 ? 'Subject must be at least 3 characters' : '';
+      case 'details':
+        return value.length < 10 && value.length > 0 ? 'Details must be at least 10 characters' : '';
+      default:
+        return '';
     }
-    setErrors(prev => ({
-      ...prev,
-      [field]: ''
-    }));
-    return true;
   };
 
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-
-    if (name === 'phoneNumber' || name === 'sendingNumber') {
-      // Only allow digits
-      if (value && !/^\d*$/.test(value)) {
-        return;
-      }
-      validatePhoneNumber(value, name);
+    let newValue = value;
+    
+    if (name === 'contactNumber') {
+      newValue = value.replace(/\D/g, '').slice(0, 11);
     }
+    if (name === 'customerPaymentNumber') {
+      newValue = value.replace(/\D/g, '').slice(0, 11);
+    }
+    if (name === 'companyPaymentNumber') {
+      newValue = value.replace(/\D/g, '').slice(0, 11);
+    }
+    
+    setFormData(prev => ({...prev, [name]: newValue}));
+    setErrors(prev => ({...prev, [name]: validateField(name, newValue)}));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setErrors(prev => ({...prev, [name]: validateField(name, value)}));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => file.size <= 2 * 1024 * 1024);
+    
+    if (validFiles.length < files.length) {
+      setErrors(prev => ({...prev, attachments: 'Files must be under 2MB'}));
+    } else {
+      setErrors(prev => ({...prev, attachments: ''}));
+    }
+
+    setFormData(prev => ({...prev, attachments: validFiles}));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newErrors = {};
     
-    const isPhoneValid = validatePhoneNumber(formData.phoneNumber, 'phoneNumber');
-    const isSendingNumberValid = validatePhoneNumber(formData.sendingNumber, 'sendingNumber');
+    Object.keys(formData).forEach(key => {
+      if (key !== 'attachments') {
+        const error = validateField(key, formData[key]);
+        if (error) newErrors[key] = error;
+      }
+    });
 
-    if (isPhoneValid && isSendingNumberValid) {
-      // Submit form logic here
+    if (Object.keys(newErrors).length === 0) {
       console.log('Form submitted:', formData);
+    } else {
+      setErrors(newErrors);
     }
   };
 
+  // Rest of the component remains the same...
+  // (Include the same JSX structure as before)
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-2xl font-semibold mb-6">Submit a Complaint</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Customer Complaint Form</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-gray-700 mb-2">Name</label>
+            <label className="block text-sm font-medium mb-2">Customer Name</label>
             <input
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
-              placeholder="Enter your name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              className={`w-full p-2 border rounded ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Your Phone Number</label>
+            <label className="block text-sm font-medium mb-2">Customer Payment Number</label>
             <input
               type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              placeholder="Enter your 11-digit phone number"
-              maxLength={11}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.phoneNumber ? 'border-red-500' : 'border-gray-300'
-              }`}
+              name="customerPaymentNumber"
+              placeholder="01XXXXXXXXX"
+              value={formData.customerPaymentNumber}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              className={`w-full p-2 border rounded ${errors.customerPaymentNumber ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
-            {errors.phoneNumber && (
-              <p className="mt-1 text-red-500 text-sm">{errors.phoneNumber}</p>
-            )}
+            {errors.customerPaymentNumber && <p className="text-red-500 text-sm mt-1">{errors.customerPaymentNumber}</p>}
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Sending Number</label>
+            <label className="block text-sm font-medium mb-2">Company Payment Number</label>
             <input
               type="text"
-              name="sendingNumber"
-              value={formData.sendingNumber}
-              onChange={handleChange}
-              placeholder="Enter sending 11-digit phone number"
-              maxLength={11}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.sendingNumber ? 'border-red-500' : 'border-gray-300'
-              }`}
+              name="companyPaymentNumber"
+              placeholder="01XXXXXXXXX"
+              value={formData.companyPaymentNumber}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              className={`w-full p-2 border rounded ${errors.companyPaymentNumber ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
-            {errors.sendingNumber && (
-              <p className="mt-1 text-red-500 text-sm">{errors.sendingNumber}</p>
-            )}
+            {errors.companyPaymentNumber && <p className="text-red-500 text-sm mt-1">{errors.companyPaymentNumber}</p>}
           </div>
 
           <div>
-            <label className="block text-gray-700 mb-2">Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Describe your issue"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+            <label className="block text-sm font-medium mb-2">Contact Number</label>
+            <input
+              type="text"
+              name="contactNumber"
+              value={formData.contactNumber}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              placeholder="01XXXXXXXXX"
+              className={`w-full p-2 border rounded ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`}
               required
             />
+            {errors.contactNumber && <p className="text-red-500 text-sm mt-1">{errors.contactNumber}</p>}
           </div>
+        </div>
 
-          <button
-            type="submit"
-            className="w-full bg-[#0f172a] text-white py-2 px-4 rounded-md hover:bg-[#1e293b] transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Submit Complaint
-          </button>
-        </form>
-      </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Subject</label>
+          <input
+            type="text"
+            name="subject"
+            value={formData.subject}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.subject ? 'border-red-500' : 'border-gray-300'}`}
+            required
+          />
+          {errors.subject && <p className="text-red-500 text-sm mt-1">{errors.subject}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">Complaint Details</label>
+          <textarea
+            name="details"
+            value={formData.details}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            rows={4}
+            className={`w-full p-2 border rounded ${errors.details ? 'border-red-500' : 'border-gray-300'}`}
+            required
+          />
+          {errors.details && <p className="text-red-500 text-sm mt-1">{errors.details}</p>}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Attachments (Max 2MB)
+            <input
+              type="file"
+              onChange={handleFileChange}
+              multiple
+              accept="image/*,.pdf,.doc,.docx"
+              className="mt-1 block w-full text-sm text-gray-500"
+            />
+          </label>
+          {errors.attachments && <p className="text-red-500 text-sm mt-1">{errors.attachments}</p>}
+          {formData.attachments.length > 0 && (
+            <ul className="mt-2 text-sm text-gray-600">
+              {formData.attachments.map((file, index) => (
+                <li key={index}>{file.name}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          Submit Complaint
+        </button>
+      </form>
     </div>
   );
 };

@@ -1,8 +1,9 @@
-import React from 'react'
+
+import AdminDashboard from '../admin/AdminDashboard'
 
 const AgentPage = () => {
   return (
-    <div>AgentPage</div>
+   <AdminDashboard />
   )
 }
 

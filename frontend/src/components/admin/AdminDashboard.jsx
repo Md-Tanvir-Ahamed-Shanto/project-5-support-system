@@ -1,9 +1,11 @@
-import { useState } from "react";
-import ComplaintForm from "../customers/ComplainForm";
+import { useContext, useState } from "react";
 import Overview from "./Overview";
 import Number from "./Number";
+import TicketManagement from "./TicketManagment";
+import { UserContext } from "../../context/UserContext";
 
 const AdminDashboard = () => {
+  const { user } = useContext(UserContext);
   const [show, setShow] = useState("overview");
 
   return (
@@ -12,29 +14,45 @@ const AdminDashboard = () => {
       <div className="w-60 h-screen bg-gray-800 text-white flex flex-col">
         <div className="p-4 flex items-center space-x-2 border-b border-gray-700">
           <div className="w-8 h-8 bg-blue-500 rounded-full"></div>
-          <span className="text-lg">Admin Panel</span>
+          <span className="text-lg">{user?.role === 'admin' ? 'Admin Panel':'Agent Panel'}</span>
         </div>
-
-        <nav className="p-4 space-y-2 flex-grow">
-          {[
-            { key: "overview", label: "Overview" },
-            { key: "number", label: "Number" },
-            { key: "online", label: "Online Data" },
-            { key: "match", label: "Match Data" },
-            { key: "payment", label: "Agent Edit Request" },
-            { key: "link", label: "Generate Link" },
-          ].map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setShow(item.key)}
-              className={`block w-full px-4 py-2 rounded ${
-                show === item.key ? "bg-blue-500" : "hover:bg-gray-700"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
+        {user.role === "admin" ? (
+          <nav className="p-4 space-y-2 flex-grow">
+            {[
+              { key: "overview", label: "Overview" },
+              { key: "number", label: "Number" },
+              { key: "ticket", label: "Tickets" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setShow(item.key)}
+                className={`block w-full px-4 py-2 rounded ${
+                  show === item.key ? "bg-blue-500" : "hover:bg-gray-700"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        ) : (
+          <nav className="p-4 space-y-2 flex-grow">
+            {[
+              { key: "overview", label: "Overview" },
+              { key: "ticket", label: "Tickets" },
+            ].map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setShow(item.key)}
+                className={`block w-full px-4 py-2 rounded ${
+                  show === item.key ? "bg-blue-500" : "hover:bg-gray-700"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        )}
+        
       </div>
 
       {/* Main Content */}
@@ -48,15 +66,8 @@ const AdminDashboard = () => {
             unmatchedTickets={100}
           />
         )}
-        {
-          show === "number" && (
-          <Number />
-              
-              )
-        }
-        {["online", "match", "payment", "link"].includes(show) && (
-          <ComplaintForm />
-        )}
+        {show === "number" && <Number />}
+        {show === "ticket" && <TicketManagement />}
       </div>
     </div>
   );

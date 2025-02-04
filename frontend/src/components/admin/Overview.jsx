@@ -9,6 +9,8 @@ import {
   CircleX,
   Ticket
 } from 'lucide-react';
+import { useContext } from 'react';
+import { UserContext } from '../../context/UserContext';
 
 const Overview = ({ 
   totalTickets = 0, 
@@ -17,6 +19,7 @@ const Overview = ({
   matchedTickets = 0, 
   unmatchedTickets = 0 
 }) => {
+  const {setUser} = useContext(UserContext)
   // Calculate percentages
   const solvedPercentage = totalTickets > 0 
     ? Math.round((solvedTickets / totalTickets) * 100) 
@@ -30,14 +33,21 @@ const Overview = ({
     const unMatchedPercentage = totalTickets > 0 
     ? Math.round((unmatchedTickets / totalTickets) * 100) 
     : 0;
-    
+    const handleLogout = () => {
+      setUser(null);
+      window.location.href = "/login";
+    };
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-full mx-auto">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+      <div className='flex items-center justify-between mb-6'>
+
+      <h2 className="text-2xl font-bold text-gray-800  flex items-center">
         <TicketIcon className="mr-3 text-blue-600" />
         Support Ticket Overview
       </h2>
+      <div onClick={handleLogout} className='p-2 bg-red-400 rounded-lg hover:bg-red-500 hover:cursor-pointer'>Logout</div>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Tickets */}
