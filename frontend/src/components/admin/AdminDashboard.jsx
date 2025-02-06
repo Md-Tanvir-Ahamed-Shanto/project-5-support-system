@@ -60,6 +60,7 @@ const AdminDashboard = () => {
         {show === "overview" && (
           <Overview
             totalTickets={500}
+            userTickets={250}
             solvedTickets={350}
             pendingTickets={150}
             matchedTickets={400}

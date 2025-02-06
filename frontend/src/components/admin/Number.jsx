@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -10,13 +10,15 @@ import {
   PencilIcon,
   Phone,
 } from "lucide-react";
+import axios from "axios";
+import { base_url } from "../../config/config";
 
 const Number = () => {
   const [totalNumbers, setTotalNumbers] = useState(500);
   const [activeNumbers, setActiveNumbers] = useState(350);
   const [limitedNumbers, setLimitedNumbers] = useState(100);
   const [expiredNumbers, setExpiredNumbers] = useState(50);
-
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredStatus, setFilteredStatus] = useState("all");
   const [isEdit, setIsEdit] = useState(null);
@@ -27,43 +29,49 @@ const Number = () => {
     status: "active",
   });
 
-  const [Numbers, setNumbers] = useState([
-    {
-      id: 1,
-      serialNumber: "12345678",
-      number: "01732343234",
-      status: "active",
-    },
-    {
-      id: 2,
-      serialNumber: "87654321",
-      number: "01736786786",
-      status: "limited",
-    },
-    {
-      id: 3,
-      serialNumber: "13572468",
-      number: "01736876786",
-      status: "expired",
-    },
-    // Add more sample Numbers
-  ]);
+  const [Numbers, setNumbers] = useState([]);
 
   const handleAddNumber = () => {
     // Logic to open a modal and create a new Numbers
     setShowModal(true);
   };
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (isEdit) {
       // Logic to update the selected Numbers
-      setShowModal(false);
-      setIsEdit(null);
-      setNewNumber({ serialNumber: "", number: "", status: "active" });
-      console.log("run update",newNumber);
+      try {
+        const response = await axios.put(
+          `${base_url}/admin/user/${isEdit}`,
+          newNumber
+        );
+        const data = response.data;
+        console.log("data: ", data);
+        if (response.status === 200) {
+          alert(data.message);
+          handleFetchUsers();
+        }
+        setShowModal(false);
+        setNewNumber({ serialNumber: "", number: "", status: "active" });
+        setError(null);
+      } catch (error) {
+        console.log("error: ", error);
+        setError(error?.response?.data?.error);
+      }
     } else {
-      console.log("submit", newNumber);
-      setShowModal(false);
-      setNewNumber({ serialNumber: "", number: "", status: "active" });
+      try {
+        const response = await axios.post(`${base_url}/admin/user`, newNumber);
+        const data = response.data;
+        console.log("data: ", data);
+        if (response.status === 201) {
+          alert(data.message);
+          handleFetchUsers();
+        }
+        setShowModal(false);
+        setNewNumber({ serialNumber: "", number: "", status: "active" });
+        setError(null);
+      } catch (error) {
+        console.log("error: ", error);
+        setError(error?.response?.data?.error);
+      }
     }
   };
 
@@ -87,6 +95,7 @@ const Number = () => {
   };
 
   const handleCloseModel = () => {
+    setError(null);
     setShowModal(false);
     setIsEdit(null);
     setNewNumber({ serialNumber: "", number: "", status: "active" });
@@ -101,6 +110,30 @@ const Number = () => {
       Numbers.number.includes(searchQuery)
     );
   });
+
+  const handleFetchUsers = async () => {
+    try {
+      const response = await axios.get(`${base_url}/admin/users`);
+      const data = response.data;
+      setNumbers(data);
+      setTotalNumbers(data.length);
+      setActiveNumbers(
+        data.filter((number) => number.status === "active").length
+      );
+      setLimitedNumbers(
+        data.filter((number) => number.status === "limited").length
+      );
+      setExpiredNumbers(
+        data.filter((number) => number.status === "expired").length
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    handleFetchUsers();
+  }, []);
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-full mx-auto">
@@ -340,6 +373,7 @@ const Number = () => {
                 Save
               </button>
             </div>
+            {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
           </div>
         </div>
       )}
