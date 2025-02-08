@@ -15,6 +15,7 @@ const ComplaintForm = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [error, setError] = useState(null)
 
   const validateField = (name, value) => {
     switch (name) {
@@ -60,6 +61,7 @@ const ComplaintForm = () => {
 
     setFormData((prev) => ({ ...prev, [name]: newValue }));
     setErrors((prev) => ({ ...prev, [name]: validateField(name, newValue) }));
+    setError(null)
   };
 
   const handleBlur = (e) => {
@@ -133,10 +135,13 @@ const ComplaintForm = () => {
         });
       } 
     } catch (error) {
-      setErrors(error?.response?.data?.error);
+      console.log("error",error?.response?.data?.error)
+      alert(error?.response?.data?.error)
+      // setErrors((prev) => ({ ...prev, n:  error?.response?.data?.error}));
+      setError(error?.response?.data?.error)
     }
   };
-
+  console.log("errorrs",errors)
   const getFilePreview = (file) => {
     if (file?.type.startsWith("image/")) {
       return URL.createObjectURL(file);
@@ -161,12 +166,12 @@ const ComplaintForm = () => {
               onChange={handleInputChange}
               onBlur={handleBlur}
               className={`w-full p-2 border rounded ${
-                errors.name ? "border-red-500" : "border-gray-300"
+                errors?.name ? "border-red-500" : "border-gray-300"
               }`}
               required
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            {errors?.name && (
+              <p className="text-red-500 text-sm mt-1">{errors?.name}</p>
             )}
           </div>
 
@@ -182,15 +187,15 @@ const ComplaintForm = () => {
               onChange={handleInputChange}
               onBlur={handleBlur}
               className={`w-full p-2 border rounded ${
-                errors.customerPaymentNumber
+                errors?.customerPaymentNumber
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
               required
             />
-            {errors.customerPaymentNumber && (
+            {errors?.customerPaymentNumber && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.customerPaymentNumber}
+                {errors?.customerPaymentNumber}
               </p>
             )}
           </div>
@@ -207,15 +212,15 @@ const ComplaintForm = () => {
               onChange={handleInputChange}
               onBlur={handleBlur}
               className={`w-full p-2 border rounded ${
-                errors.companyPaymentNumber
+                errors?.companyPaymentNumber
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
               required
             />
-            {errors.companyPaymentNumber && (
+            {errors?.companyPaymentNumber && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.companyPaymentNumber}
+                {errors?.companyPaymentNumber}
               </p>
             )}
           </div>
@@ -232,13 +237,13 @@ const ComplaintForm = () => {
               onBlur={handleBlur}
               placeholder="01XXXXXXXXX"
               className={`w-full p-2 border rounded ${
-                errors.contactNumber ? "border-red-500" : "border-gray-300"
+                errors?.contactNumber ? "border-red-500" : "border-gray-300"
               }`}
               required
             />
-            {errors.contactNumber && (
+            {errors?.contactNumber && (
               <p className="text-red-500 text-sm mt-1">
-                {errors.contactNumber}
+                {errors?.contactNumber}
               </p>
             )}
           </div>
@@ -255,12 +260,12 @@ const ComplaintForm = () => {
             onChange={handleInputChange}
             onBlur={handleBlur}
             className={`w-full p-2 border rounded ${
-              errors.subject ? "border-red-500" : "border-gray-300"
+              errors?.subject ? "border-red-500" : "border-gray-300"
             }`}
             required
           />
-          {errors.subject && (
-            <p className="text-red-500 text-sm mt-1">{errors.subject}</p>
+          {errors?.subject && (
+            <p className="text-red-500 text-sm mt-1">{errors?.subject}</p>
           )}
         </div>
 
@@ -276,12 +281,12 @@ const ComplaintForm = () => {
             onBlur={handleBlur}
             rows={4}
             className={`w-full p-2 border rounded ${
-              errors.details ? "border-red-500" : "border-gray-300"
+              errors?.details ? "border-red-500" : "border-gray-300"
             }`}
             required
           />
-          {errors.details && (
-            <p className="text-red-500 text-sm mt-1">{errors.details}</p>
+          {errors?.details && (
+            <p className="text-red-500 text-sm mt-1">{errors?.details}</p>
           )}
         </div>
 
@@ -355,11 +360,17 @@ const ComplaintForm = () => {
             </label>
           )}
 
-          {errors.attachments && (
-            <p className="text-red-500 text-sm mt-1">{errors.attachments}</p>
+          {errors?.attachments && (
+            <p className="text-red-500 text-sm mt-1">{errors?.attachments}</p>
           )}
         </div>
-
+        {
+          error && (
+            <p className="text-red-500 text-sm mt-1">
+              {error}
+            </p>
+          )
+        } 
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition-colors"

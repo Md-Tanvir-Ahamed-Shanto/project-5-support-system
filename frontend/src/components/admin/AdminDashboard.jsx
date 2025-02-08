@@ -1,13 +1,30 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Overview from "./Overview";
 import Number from "./Number";
 import TicketManagement from "./TicketManagment";
 import { UserContext } from "../../context/UserContext";
+import axios from "axios";
+import { base_url } from "../../config/config";
 
 const AdminDashboard = () => {
   const { user } = useContext(UserContext);
   const [show, setShow] = useState("overview");
-
+  const [data, setData] = useState({})
+  const fetchData = async()=>{
+try {
+  let response = await axios.get(`${base_url}/tickets/stats`)
+  if(response.status === 200){
+    
+    // console.log("response", response);
+    setData(response.data)
+  }
+  // console.log(data)
+} catch (error) {
+  console.log('error',error)
+}  }
+  useEffect(()=>{
+    fetchData();
+},[])
   return (
     <div className="min-h-screen w-full flex bg-gray-100">
       {/* Sidebar */}
@@ -59,12 +76,12 @@ const AdminDashboard = () => {
       <div className="flex-grow p-6">
         {show === "overview" && (
           <Overview
-            totalTickets={500}
-            userTickets={250}
-            solvedTickets={350}
-            pendingTickets={150}
-            matchedTickets={400}
-            unmatchedTickets={100}
+            totalTickets={data?.totalTickets}
+            repetitiveReports={data?.repetitiveReports}
+            solvedTickets={data?.solvedTickets}
+            pendingTickets={data?.pendingTickets}
+            matchedTickets={data?.matchedTickets}
+            unmatchedTickets={data?.unmatchedTickets}
           />
         )}
         {show === "number" && <Number />}

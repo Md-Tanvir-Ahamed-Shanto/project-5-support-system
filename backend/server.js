@@ -54,37 +54,70 @@ const storage = multer.diskStorage({
 
 // 🚀 Customer submits a complaint with a single file upload
 app.post("/api/complaint", (req, res) => {
-    upload(req, res, (err) => {
+  upload(req, res, (err) => {
       if (err) {
-        return res.status(400).json({ error: err.message });
+          return res.status(400).json({ error: err.message });
       }
-  
+
       const { name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details } = req.body;
       const attachments = req.file ? req.file.filename : null; // Single file handling
-  
+
       if (!name || !customerPaymentNumber || !companyPaymentNumber || !contactNumber || !subject || !details) {
-        return res.status(400).json({ error: "All fields are required except attachment." });
+          return res.status(400).json({ error: "All fields are required except attachment." });
       }
-  
-      // Check if companyPaymentNumber exists in the users table
-      db.query("SELECT number FROM users WHERE number = ?", [companyPaymentNumber], (err, results) => {
-        if (err) return res.status(500).json({ error: "Database error: " + err.message });
-        const priority = results.length > 0 ? "Low" : "High";
-  
-        // Insert into complaints table
-        db.query(
-          "INSERT INTO complaints (name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details, attachments, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-          [name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details, attachments, priority],
-          (err, result) => {
-            if (err) return res.status(500).json({ error: "Database error: " + err.message });
-  
-            res.status(201).json({ message: "Complaint submitted successfully!", complaintId: result.insertId });
+
+      // Check if the user already has a pending complaint
+      db.query(
+          "SELECT status FROM complaints WHERE customerPaymentNumber = ? AND subject = ? ORDER BY id DESC LIMIT 1",
+          [customerPaymentNumber, subject],
+          (err, results) => {
+              if (err) return res.status(500).json({ error: "Database error: " + err.message });
+
+              // If there is a pending complaint, prevent duplicate submission
+              if (results.length > 0 && results[0].status === "pending") {
+                  return res.status(400).json({ error: "এই বিষয়ে আপনার ইতিমধ্যেই একটি অভিযোগ বিচারাধীন রয়েছে। এটি সমাধান না হওয়া পর্যন্ত অপেক্ষা করুন।" });
+              }
+
+              // Determine priority based on companyPaymentNumber existence
+              db.query("SELECT number FROM users WHERE number = ?", [companyPaymentNumber], (err, companyResults) => {
+                  if (err) return res.status(500).json({ error: "Database error: " + err.message });
+                  const priority = companyResults.length > 0 ? "Low" : "High";
+
+                  // Insert the complaint into the database
+                  db.query(
+                      "INSERT INTO complaints (name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details, attachments, priority, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Pending')",
+                      [name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details, attachments, priority],
+                      (err, result) => {
+                          if (err) return res.status(500).json({ error: "Database error: " + err.message });
+
+                          res.status(201).json({ message: "Complaint submitted successfully!", complaintId: result.insertId });
+                      }
+                  );
+              });
           }
-        );
-      });
-    });
+      );
   });
-  
+});
+
+app.get("/api/tickets/stats", (req, res) => {
+  db.query(
+      `SELECT 
+          COUNT(*) AS totalTickets,
+          SUM(CASE WHEN status = 'Solved' THEN 1 ELSE 0 END) AS solvedTickets,
+          SUM(CASE WHEN status = 'Pending' THEN 1 ELSE 0 END) AS pendingTickets,
+          SUM(CASE WHEN companyPaymentNumber IN (SELECT number FROM users) THEN 1 ELSE 0 END) AS matchedTickets,
+          SUM(CASE WHEN companyPaymentNumber NOT IN (SELECT number FROM users) THEN 1 ELSE 0 END) AS unmatchedTickets,
+          SUM(CASE WHEN customerPaymentNumber IN (SELECT customerPaymentNumber FROM complaints GROUP BY customerPaymentNumber, subject HAVING COUNT(*) > 1) THEN 1 ELSE 0 END) AS repetitiveReports
+      FROM complaints`,
+      (err, results) => {
+          if (err) {
+              return res.status(500).json({ error: "Database error: " + err.message });
+          }
+          res.status(200).json(results[0]);
+      }
+  );
+});
+
 
 // 🛠 Admin API: Create a User
 app.post("/api/admin/user", (req, res) => {

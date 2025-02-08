@@ -14,7 +14,7 @@ import { UserContext } from "../../context/UserContext";
 
 const Overview = ({
   totalTickets = 0,
-  userTickets  = 0,
+  repetitiveReports  = 0,
   solvedTickets = 0,
   pendingTickets = 0,
   matchedTickets = 0,
@@ -30,8 +30,9 @@ const Overview = ({
     totalTickets > 0 ? Math.round((matchedTickets / totalTickets) * 100) : 0;
   const unMatchedPercentage =
     totalTickets > 0 ? Math.round((unmatchedTickets / totalTickets) * 100) : 0;
-  const repeateativeParcentage =
-    totalTickets > 0 ? Math.round(100 * (userTickets  / totalTickets)) : 0;
+    const repetitivePercentage = totalTickets > 0 
+    ? Math.round((repetitiveReports / totalTickets) * 100) 
+    : 0;
 
   const handleLogout = () => {
     setUser(null);
@@ -132,9 +133,9 @@ const Overview = ({
           <div className="flex items-center justify-between mb-3">
             <CircleX className="text-purple-500" />
             <span className="text-3xl font-bold text-purple-800">
-              {totalTickets / userTickets }{" "}
+              {repetitiveReports }{" "}
               <span className="text-sm text-purple-600">
-                ({repeateativeParcentage}%)
+                ({repetitivePercentage}%)
               </span>
             </span>
           </div>
