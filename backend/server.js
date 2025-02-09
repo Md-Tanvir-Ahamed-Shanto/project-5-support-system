@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const dotenv = require("dotenv");
 const cors = require("cors")
+const config = require("./config/config");
 
 dotenv.config();
 const app = express();
@@ -15,10 +16,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
 
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "system_support",
+  host: config.DB_HOST,
+  user: config.DB_USER,
+  password: config.DB_PASSWORD,
+  database: config.DB_NAME
 });
 
 db.connect(err => {
