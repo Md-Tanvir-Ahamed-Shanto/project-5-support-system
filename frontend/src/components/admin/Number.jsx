@@ -26,6 +26,7 @@ const Number = () => {
   const [newNumber, setNewNumber] = useState({
     serialNumber: "",
     number: "",
+    comments: "",
     status: "active",
   });
 
@@ -50,7 +51,7 @@ const Number = () => {
           handleFetchUsers();
         }
         setShowModal(false);
-        setNewNumber({ serialNumber: "", number: "", status: "active" });
+        setNewNumber({ serialNumber: "", number: "", comments: "" , status: "active" });
         setError(null);
       } catch (error) {
         console.log("error: ", error);
@@ -66,7 +67,7 @@ const Number = () => {
           handleFetchUsers();
         }
         setShowModal(false);
-        setNewNumber({ serialNumber: "", number: "", status: "active" });
+        setNewNumber({ serialNumber: "", number: "", comments: "", status: "active" });
         setError(null);
       } catch (error) {
         console.log("error: ", error);
@@ -98,7 +99,7 @@ const Number = () => {
     setError(null);
     setShowModal(false);
     setIsEdit(null);
-    setNewNumber({ serialNumber: "", number: "", status: "active" });
+    setNewNumber({ serialNumber: "", number: "",comments:"", status: "active" });
   };
 
   const filteredNumbers = Numbers.filter((Numbers) => {
@@ -346,6 +347,15 @@ const Number = () => {
               value={newNumber.number}
               onChange={(e) =>
                 setNewNumber({ ...newNumber, number: e.target.value })
+              }
+            />
+             <input
+              type="text"
+              placeholder="Comments"
+              className="border p-2 w-full mb-2"
+              value={newNumber.comments}
+              onChange={(e) =>
+                setNewNumber({ ...newNumber, comments: e.target.value })
               }
             />
             <select

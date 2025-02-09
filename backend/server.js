@@ -121,12 +121,12 @@ app.get("/api/tickets/stats", (req, res) => {
 
 // 🛠 Admin API: Create a User
 app.post("/api/admin/user", (req, res) => {
-  const { serialNumber, number, status } = req.body;
+  const { serialNumber, number, status , comments } = req.body;
   if (!serialNumber || !number || !status) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
-  db.query("INSERT INTO users (serialNumber, number, status) VALUES (?, ?, ?)", [serialNumber, number, status], (err, result) => {
+  db.query("INSERT INTO users (serialNumber, number, status, comments) VALUES (?, ?, ?)", [serialNumber, number, status, comments], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.status(201).json({ message: "User created successfully!", userId: result.insertId });
   });
@@ -142,12 +142,12 @@ app.get("/api/admin/users", (req, res) => {
 
 // ✏️ Admin API: Edit User
 app.put("/api/admin/user/:id", (req, res) => {
-  const { serialNumber, number, status } = req.body;
+  const { serialNumber, number, status, comments } = req.body;
   const { id } = req.params;
 
   db.query(
-    "UPDATE users SET serialNumber = ?, number = ?, status = ? WHERE id = ?",
-    [serialNumber, number, status, id],
+    "UPDATE users SET serialNumber = ?, number = ?,comments = ?, status = ? WHERE id = ?",
+    [serialNumber, number ,comments, status, id],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.status(200).json({ message: "User updated successfully!" });

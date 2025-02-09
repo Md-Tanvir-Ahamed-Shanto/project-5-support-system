@@ -28,6 +28,18 @@ const TicketManagement = () => {
     });
   };
 
+  const handleDelete = async () => {
+    try {
+      let response =await axios.delete(`${base_url}/admin/complaints/cleanup`);
+      if(response.status === 200){
+        alert(response.data.message);
+      }
+      fetchData();
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
   const fetchData = async () => {
     try {
       let response = await axios.get(`${base_url}/admin/complaints`);
@@ -42,10 +54,11 @@ const TicketManagement = () => {
   return (
     <div className="p-6 bg-white shadow-lg">
       <div className="bg-gray-100 w-full">
-        <div className="flex items-center justify-center w-full p-3">
+        <div className="flex relative items-center justify-center w-full p-3">
           <h2 className="text-2xl font-bold text-gray-800">
             Ticket Management
           </h2>
+          <button onClick={handleDelete} className="absolute right-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">Delete Old Data</button>
         </div>
       </div>
       <div className="w-full mt-3 px-8 ">
