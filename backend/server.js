@@ -127,7 +127,7 @@ app.post("/api/admin/user", (req, res) => {
     return res.status(400).json({ error: "All fields are required." });
   }
 
-  db.query("INSERT INTO users (serialNumber, number, status, comments) VALUES (?, ?, ?)", [serialNumber, number, status, comments], (err, result) => {
+  db.query("INSERT INTO users (serialNumber, number, status, comments) VALUES (?, ?, ?, ?)", [serialNumber, number, status, comments], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     res.status(201).json({ message: "User created successfully!", userId: result.insertId });
   });

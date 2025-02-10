@@ -20,6 +20,7 @@ const Number = () => {
   const [expiredNumbers, setExpiredNumbers] = useState(50);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
   const [filteredStatus, setFilteredStatus] = useState("all");
   const [isEdit, setIsEdit] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -36,43 +37,44 @@ const Number = () => {
     // Logic to open a modal and create a new Numbers
     setShowModal(true);
   };
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!newNumber.serialNumber.trim()) {
+      errors.serialNumber = "Serial number is required";
+    }
+
+    if (!newNumber.number.trim()) {
+      errors.number = "Phone number is required";
+    } else if (!/^\d{11}$/.test(newNumber.number.trim())) {
+      errors.number = "Phone number must be exactly 11 digits";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  const handleNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+    setNewNumber({ ...newNumber, number: value });
+  };
+
   const handleSubmit = async () => {
-    if (isEdit) {
-      // Logic to update the selected Numbers
-      try {
-        const response = await axios.put(
-          `${base_url}/admin/user/${isEdit}`,
-          newNumber
-        );
-        const data = response.data;
-        console.log("data: ", data);
-        if (response.status === 200) {
-          alert(data.message);
-          handleFetchUsers();
-        }
-        setShowModal(false);
-        setNewNumber({ serialNumber: "", number: "", comments: "" , status: "active" });
-        setError(null);
-      } catch (error) {
-        console.log("error: ", error);
-        setError(error?.response?.data?.error);
+    if (!validateForm()) return;
+
+    try {
+      const url = isEdit 
+        ? `${base_url}/admin/user/${isEdit}`
+        : `${base_url}/admin/user`;
+      const method = isEdit ? 'put' : 'post';
+      
+      const response = await axios[method](url, newNumber);
+      if (response.status === (isEdit ? 200 : 201)) {
+        alert(response.data.message);
+        handleFetchUsers();
+        handleCloseModel();
       }
-    } else {
-      try {
-        const response = await axios.post(`${base_url}/admin/user`, newNumber);
-        const data = response.data;
-        console.log("data: ", data);
-        if (response.status === 201) {
-          alert(data.message);
-          handleFetchUsers();
-        }
-        setShowModal(false);
-        setNewNumber({ serialNumber: "", number: "", comments: "", status: "active" });
-        setError(null);
-      } catch (error) {
-        console.log("error: ", error);
-        setError(error?.response?.data?.error);
-      }
+    } catch (error) {
+      setError(error?.response?.data?.error);
     }
   };
 
@@ -91,8 +93,16 @@ const Number = () => {
     // Logic to open a modal and edit the selected Numbers
   };
 
-  const handleDeleteNumber = (NumbersId) => {
-    // Logic to delete the selected Numbers
+  const handleDeleteNumber = async (NumbersId) => {
+    try {
+      const response = await axios.delete(`${base_url}/admin/user/${NumbersId}`);
+      if (response.status === 200) {
+        alert(response.data.message);
+        handleFetchUsers();
+      }
+    } catch (error) {
+      setError(error?.response?.data?.error);
+    }
   };
 
   const handleCloseModel = () => {
@@ -331,44 +341,51 @@ const Number = () => {
             <h3 className="text-lg font-bold mb-4">
               {isEdit ? "Edit Number" : "Add New Number"}
             </h3>
+            
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Serial Number"
+                className={`border p-2 w-full ${validationErrors.serialNumber ? 'border-red-500' : ''}`}
+                value={newNumber.serialNumber}
+                onChange={(e) => setNewNumber({ ...newNumber, serialNumber: e.target.value })}
+              />
+              {validationErrors.serialNumber && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.serialNumber}</p>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Phone Number (11 digits)"
+                className={`border p-2 w-full ${validationErrors.number ? 'border-red-500' : ''}`}
+                value={newNumber.number}
+                onChange={handleNumberChange}
+              />
+              {validationErrors.number && (
+                <p className="text-red-500 text-sm mt-1">{validationErrors.number}</p>
+              )}
+            </div>
+
             <input
-              type="text"
-              placeholder="Serial Number"
-              className="border p-2 w-full mb-2"
-              value={newNumber.serialNumber}
-              onChange={(e) =>
-                setNewNumber({ ...newNumber, serialNumber: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Number"
-              className="border p-2 w-full mb-2"
-              value={newNumber.number}
-              onChange={(e) =>
-                setNewNumber({ ...newNumber, number: e.target.value })
-              }
-            />
-             <input
               type="text"
               placeholder="Comments"
-              className="border p-2 w-full mb-2"
+              className="border p-2 w-full mb-4"
               value={newNumber.comments}
-              onChange={(e) =>
-                setNewNumber({ ...newNumber, comments: e.target.value })
-              }
+              onChange={(e) => setNewNumber({ ...newNumber, comments: e.target.value })}
             />
+
             <select
-              className="border p-2 w-full mb-2"
+              className="border p-2 w-full mb-4"
               value={newNumber.status}
-              onChange={(e) =>
-                setNewNumber({ ...newNumber, status: e.target.value })
-              }
+              onChange={(e) => setNewNumber({ ...newNumber, status: e.target.value })}
             >
               <option value="active">Active</option>
               <option value="limited">Limited</option>
               <option value="expired">Expired</option>
             </select>
+
             <div className="flex justify-end space-x-2">
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded"
@@ -383,6 +400,7 @@ const Number = () => {
                 Save
               </button>
             </div>
+            
             {error && <div className="mt-2 text-red-500 text-sm">{error}</div>}
           </div>
         </div>
