@@ -13,25 +13,71 @@ const TicketManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleStatusChange = (newStatus) => {
-    if (selectedTicket) {
-      setSelectedTicket({ ...selectedTicket, status: newStatus });
+  // const handleStatusChange = (newStatus) => {
+  //   if (selectedTicket) {
+  //     setSelectedTicket({ ...selectedTicket, status: newStatus });
+  //   }
+  // };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleChangeSolved = async (id) => {
+    try {
+      let response = await axios.put(
+        `${base_url}/admin/complaint/${id}/status`,
+        { status: "solved" }
+      );
+      if (response.status === 200) {
+        alert(response.data.message);
+        fetchData();
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.log("error", error);
     }
   };
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+
+  const handleChangePending = async (id) => {
+    try {
+      let response = await axios.put(
+        `${base_url}/admin/complaint/${id}/status`,
+        { status: "pending" }
+      );
+      if (response.status === 200) {
+        alert(response.data.message);
+        fetchData();
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  const handleDeleteSingleTicket = async (id) => {
+    try {
+      let response = await axios.delete(`${base_url}/admin/complaints/${id}`);
+      if (response.status === 200) {
+        alert(response.data.message);
+        fetchData();
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   const handleDelete = async () => {
     try {
-      let response =await axios.delete(`${base_url}/admin/complaints/cleanup`);
-      if(response.status === 200){
+      let response = await axios.delete(`${base_url}/admin/complaints/cleanup`);
+      if (response.status === 200) {
         alert(response.data.message);
       }
       fetchData();
@@ -58,11 +104,16 @@ const TicketManagement = () => {
           <h2 className="text-2xl font-bold text-gray-800">
             Ticket Management
           </h2>
-          <button onClick={handleDelete} className="absolute right-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">Delete Old Data</button>
+          <button
+            onClick={handleDelete}
+            className="absolute right-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+          >
+            Delete Old Data
+          </button>
         </div>
       </div>
       <div className="w-full mt-3 px-8 ">
-      <button
+        <button
           onClick={() => setActiveTab("All")}
           className={` w-full py-2 rounded-lg ${
             activeTab === "All"
@@ -110,14 +161,20 @@ const TicketManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {
-              activeTab === "All" ? (
-                tickets.map((ticket) => (
-                  <tr className={ticket.priority === "High" ? "bg-red-100" : ""} key={ticket.id}>
+            {activeTab === "All"
+              ? tickets.map((ticket) => (
+                  <tr
+                    className={ticket.priority === "High" ? "bg-red-100" : ""}
+                    key={ticket.id}
+                  >
                     <td className="p-2 border">{ticket.id}</td>
                     <td className="p-2 border">{ticket.name}</td>
-                    <td className="p-2 border">{ticket.customerPaymentNumber}</td>
-                    <td className="p-2 border">{ticket.companyPaymentNumber}</td>
+                    <td className="p-2 border">
+                      {ticket.customerPaymentNumber}
+                    </td>
+                    <td className="p-2 border">
+                      {ticket.companyPaymentNumber}
+                    </td>
                     <td className="p-2 border">{ticket.subject}</td>
                     <td className="p-2 border">{ticket.status}</td>
                     <td className="p-2 border">
@@ -130,15 +187,18 @@ const TicketManagement = () => {
                     </td>
                   </tr>
                 ))
-              ) : (
-                tickets
+              : tickets
                   .filter((ticket) => ticket.priority === activeTab)
                   .map((ticket) => (
                     <tr key={ticket.id} className="hover:bg-gray-50">
                       <td className="p-2 border">{ticket.id}</td>
                       <td className="p-2 border">{ticket.name}</td>
-                      <td className="p-2 border">{ticket.customerPaymentNumber}</td>
-                      <td className="p-2 border">{ticket.companyPaymentNumber}</td>
+                      <td className="p-2 border">
+                        {ticket.customerPaymentNumber}
+                      </td>
+                      <td className="p-2 border">
+                        {ticket.companyPaymentNumber}
+                      </td>
                       <td className="p-2 border">{ticket.subject}</td>
                       <td className="p-2 border">
                         <span
@@ -160,94 +220,100 @@ const TicketManagement = () => {
                         </button>
                       </td>
                     </tr>
-                  ))
-              )
-            }
+                  ))}
           </tbody>
         </table>
       </div>
 
       {isModalOpen && selectedTicket && (
         <div className="fixed inset-0 bg-black/50 flex  h-full items-center justify-center">
-        <div className="bg-white p-6 rounded-lg w-full overflow-y-scroll h-full max-w-6xl">
-          <h2 className="text-xl font-bold mb-4">Ticket Details</h2>
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div>
-              <p className="font-semibold">Customer Name:</p>
-              <p>{selectedTicket.name}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Customer Payment Number:</p>
-              <p>{selectedTicket.customerPaymentNumber}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Company Payment Number:</p>
-              <p>{selectedTicket.companyPaymentNumber}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Contact Number:</p>
-              <p>{selectedTicket.contactNumber}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Subject:</p>
-              <p>{selectedTicket.subject}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Priority:</p>
-              <p>{selectedTicket.priority}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Created At:</p>
-              <p>{formatDate(selectedTicket.createdAt)}</p>
-            </div>
-            <div>
-              <p className="font-semibold">Current Status:</p>
-              <p className="capitalize">{selectedTicket.status}</p>
-            </div>
-            <div className="col-span-2">
-              <p className="font-semibold">Details:</p>
-              <p>{selectedTicket.details}</p>
-            </div>
-            {selectedTicket.attachments && (
-              <div className="col-span-2">
-                <p className="font-semibold">Attachments:</p>
-                <img src={`${api_url}/uploads/${selectedTicket.attachments}`} alt="attachment" />
-                <div className="w-full flex justify-center items-center gap-5 mt-2">
-
-                <p>{selectedTicket.attachments}</p>
-                <a className="underline text-blue-500 hover:text-blue-600" href={`${api_url}/uploads/${selectedTicket.attachments}`} target="_blank">Dowload / View</a>
-                </div>
+          <div className="bg-white p-6 rounded-lg w-full overflow-y-scroll h-full max-w-6xl">
+            <h2 className="text-xl font-bold mb-4">Ticket Details</h2>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <p className="font-semibold">Customer Name:</p>
+                <p>{selectedTicket.name}</p>
               </div>
-            )}
-          </div>
-          <div className="flex gap-4">
-          <button
-              onClick={() => handleStatusChange("pending")}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Delete Ticket
-            </button>
-            <button
-              onClick={() => handleStatusChange("pending")}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
-            >
-              Mark as Pending
-            </button>
-            <button
-              onClick={() => handleStatusChange("solved")}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Mark as Solved
-            </button>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-auto"
-            >
-              Close
-            </button>
+              <div>
+                <p className="font-semibold">Customer Payment Number:</p>
+                <p>{selectedTicket.customerPaymentNumber}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Company Payment Number:</p>
+                <p>{selectedTicket.companyPaymentNumber}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Contact Number:</p>
+                <p>{selectedTicket.contactNumber}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Subject:</p>
+                <p>{selectedTicket.subject}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Priority:</p>
+                <p>{selectedTicket.priority}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Created At:</p>
+                <p>{formatDate(selectedTicket.createdAt)}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Current Status:</p>
+                <p className="capitalize">{selectedTicket.status}</p>
+              </div>
+              <div className="col-span-2">
+                <p className="font-semibold">Details:</p>
+                <p>{selectedTicket.details}</p>
+              </div>
+              {selectedTicket.attachments && (
+                <div className="col-span-2">
+                  <p className="font-semibold">Attachments:</p>
+                  <img
+                    src={`${api_url}/uploads/${selectedTicket.attachments}`}
+                    alt="attachment"
+                  />
+                  <div className="w-full flex justify-center items-center gap-5 mt-2">
+                    <p>{selectedTicket.attachments}</p>
+                    <a
+                      className="underline text-blue-500 hover:text-blue-600"
+                      href={`${api_url}/uploads/${selectedTicket.attachments}`}
+                      target="_blank"
+                    >
+                      Dowload / View
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-4">
+              <button
+                onClick={() => handleDeleteSingleTicket(selectedTicket.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Delete Ticket
+              </button>
+              <button
+                onClick={() => handleChangePending(selectedTicket.id)}
+                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+              >
+                Mark as Pending
+              </button>
+              <button
+                onClick={() => handleChangeSolved(selectedTicket.id)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Mark as Solved
+              </button>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-auto"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

@@ -181,5 +181,45 @@ app.delete("/api/admin/complaints/cleanup", (req, res) => {
   });
 });
 
+// 🚀 Update Complaint Status (Pending or Solved)
+app.put("/api/admin/complaint/:id/status", (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (!["pending", "solved"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status. Use 'pending' or 'solved'." });
+  }
+
+  db.query(
+    "UPDATE complaints SET status = ? WHERE id = ?",
+    [status, id],
+    (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Complaint not found!" });
+      }
+
+      res.json({ message: `Complaint status updated to '${status}' successfully!` });
+    }
+  );
+});
+
+// 🚀 Delete a Complaint (Ticket)
+app.delete("/api/admin/complaints/:id", (req, res) => {
+  const { id } = req.params;
+
+  db.query("DELETE FROM complaints WHERE id = ?", [id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Complaint not found!" });
+    }
+
+    res.json({ message: "Complaint deleted successfully!" });
+  });
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
