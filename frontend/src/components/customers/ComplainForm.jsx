@@ -152,7 +152,7 @@ const ComplaintForm = () => {
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Customer Complaint Form
+      গ্রাহক অভিযোগ ফর্ম
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">

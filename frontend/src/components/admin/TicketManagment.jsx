@@ -1,23 +1,41 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { api_url, base_url } from "../../config/config";
 import axios from "axios";
+import { UserContext } from "../../context/UserContext";
 
 const TicketManagement = () => {
-  const [activeTab, setActiveTab] = useState("High");
+  const { user } = useContext(UserContext);
+  const [activeTab, setActiveTab] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [ticketsALL, setTicketsALL] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [tickets, setTickets] = useState([]);
 
+console.log("searc",searchTerm)
+console.log(tickets)
   const handleView = (ticket) => {
     setSelectedTicket(ticket);
     setIsModalOpen(true);
   };
 
-  // const handleStatusChange = (newStatus) => {
-  //   if (selectedTicket) {
-  //     setSelectedTicket({ ...selectedTicket, status: newStatus });
-  //   }
-  // };
+  useEffect(()=>{
+    if(searchTerm){
+
+      const filteredTickets = ticketsALL.filter((ticket) => {
+        return (
+          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      })
+      let data = filteredTickets
+      console.log("data",data)
+    }
+    setTickets(ticketsALL)
+
+  },[searchTerm])
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -89,6 +107,7 @@ const TicketManagement = () => {
   const fetchData = async () => {
     try {
       let response = await axios.get(`${base_url}/admin/complaints`);
+      setTicketsALL(response.data);
       setTickets(response.data);
     } catch (error) {
       console.log("error", error);
@@ -104,15 +123,17 @@ const TicketManagement = () => {
           <h2 className="text-2xl font-bold text-gray-800">
             Ticket Management
           </h2>
-          <button
-            onClick={handleDelete}
-            className="absolute right-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
-          >
-            Delete Old Data
-          </button>
+          {user.role === "admin" && (
+            <button
+              onClick={handleDelete}
+              className="absolute right-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+            >
+              Delete Old Data
+            </button>
+          )}
         </div>
       </div>
-      <div className="w-full mt-3 px-8 ">
+      <div className="w-full mt-3 px-8 flex justify-between gap-4">
         <button
           onClick={() => setActiveTab("All")}
           className={` w-full py-2 rounded-lg ${
@@ -123,6 +144,16 @@ const TicketManagement = () => {
         >
           All
         </button>
+        <div className="w-full">
+          {/* search bar */}
+          <input
+            type="text"
+            placeholder="Search..."
+            className="w-full py-2 px-4 border border-gray-300 rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
       <div className="flex justify-center items-center mt-3 px-8 w-full gap-4 mb-6">
         <button
@@ -144,6 +175,26 @@ const TicketManagement = () => {
           }`}
         >
           Low Priority
+        </button>
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`w-full py-2 rounded-lg ${
+            activeTab === "pending"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Pending
+        </button>
+        <button
+          onClick={() => setActiveTab("solved")}
+          className={`w-full py-2 rounded-lg ${
+            activeTab === "solved"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+          }`}
+        >
+          Solved
         </button>
       </div>
 
@@ -176,7 +227,17 @@ const TicketManagement = () => {
                       {ticket.companyPaymentNumber}
                     </td>
                     <td className="p-2 border">{ticket.subject}</td>
-                    <td className="p-2 border">{ticket.status}</td>
+                    <td className="p-2 border">
+                      <span
+                        className={`px-2 py-1 rounded-full text-sm ${
+                          ticket.status === "solved"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {ticket.status}
+                      </span>
+                    </td>
                     <td className="p-2 border">
                       <button
                         onClick={() => handleView(ticket)}
@@ -187,10 +248,48 @@ const TicketManagement = () => {
                     </td>
                   </tr>
                 ))
-              : tickets
+              : activeTab === "High" || activeTab === "Low"
+              ? tickets
                   .filter((ticket) => ticket.priority === activeTab)
                   .map((ticket) => (
                     <tr key={ticket.id} className="hover:bg-gray-50">
+                      <td className="p-2 border">{ticket.id}</td>
+                      <td className="p-2 border">{ticket.name}</td>
+                      <td className="p-2 border">
+                        {ticket.customerPaymentNumber}
+                      </td>
+                      <td className="p-2 border">
+                        {ticket.companyPaymentNumber}
+                      </td>
+                      <td className="p-2 border">{ticket.subject}</td>
+                      <td className="p-2 border">
+                        <span
+                          className={`px-2 py-1 rounded-full text-sm ${
+                            ticket.status === "solved"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {ticket.status}
+                        </span>
+                      </td>
+                      <td className="p-2 border">
+                        <button
+                          onClick={() => handleView(ticket)}
+                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+              : tickets
+                  .filter((ticket) => ticket.status === activeTab)
+                  .map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      className={ticket.priority === "High" ? "bg-red-100" : ""}
+                    >
                       <td className="p-2 border">{ticket.id}</td>
                       <td className="p-2 border">{ticket.name}</td>
                       <td className="p-2 border">
@@ -287,12 +386,15 @@ const TicketManagement = () => {
               )}
             </div>
             <div className="flex gap-4">
-              <button
-                onClick={() => handleDeleteSingleTicket(selectedTicket.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-              >
-                Delete Ticket
-              </button>
+              {user.role === "admin" && (
+                <button
+                  onClick={() => handleDeleteSingleTicket(selectedTicket.id)}
+                  className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                >
+                  Delete Ticket
+                </button>
+              )}
+
               <button
                 onClick={() => handleChangePending(selectedTicket.id)}
                 className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"

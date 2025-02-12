@@ -69,8 +69,8 @@ app.post("/api/complaint", (req, res) => {
 
       // Check if the user already has a pending complaint
       db.query(
-          "SELECT status FROM complaints WHERE customerPaymentNumber = ? AND subject = ? ORDER BY id DESC LIMIT 1",
-          [customerPaymentNumber, subject],
+          "SELECT status FROM complaints WHERE customerPaymentNumber = ? ORDER BY id DESC LIMIT 1",
+          [customerPaymentNumber],
           (err, results) => {
               if (err) return res.status(500).json({ error: "Database error: " + err.message });
 

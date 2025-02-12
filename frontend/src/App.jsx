@@ -29,7 +29,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/go97/hello" element={<LoginPage />} />
           {/* <Route path="/submit/:id" element={<UserSubmitForm />} /> */}
           <Route path="/" element={<ComplaintForm />} />
         </Routes>

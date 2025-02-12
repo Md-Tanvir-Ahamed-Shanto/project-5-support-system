@@ -1,65 +1,71 @@
-import { useContext, useState } from 'react';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { UserContext } from '../../context/UserContext';
+import { useContext, useState } from "react";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../../context/UserContext";
 
 const LoginPage = () => {
-  const {setUser} = useContext(UserContext)
+  const { setUser } = useContext(UserContext);
   const [formData, setFormData] = useState({
-    username: '',
-    password: ''
+    username: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-const router = useNavigate();
+  const [error, setError] = useState("");
+  const router = useNavigate();
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    setError('');
+    setError("");
   };
   const saveToLocalStorage = (key, value) => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(key,  JSON.stringify(value));
+      localStorage.setItem(key, JSON.stringify(value));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.username || !formData.password) {
-      setError('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
     try {
-      let response = await axios.post(`https://agent-submission-api.searngo.site/login`,{
-        username: formData.username,
-        password: formData.password
-      })
-      console.log("login response",response);
-      if(response.status === 200){
-        console.log(response)
-        setUser(response?.data?.user);
+      let response = await axios.post(
+        `https://agent-submission-api.searngo.site/login`,
+        {
+          username: formData.username,
+          password: formData.password,
+        }
+      );
+      console.log("login response", response);
+      if (response.status === 200) {
+        console.log(response);
         // local saved data
-        saveToLocalStorage("user", response?.data?.user)
-        if(response?.data?.user?.role === "admin"){
-          router("/admin")
-        }else{
-          router("/agent")
+        if (response?.data?.user?.role === "admin") {
+          setUser(response?.data?.user);
+          saveToLocalStorage("user", response?.data?.user);
+          router("/admin");
+        } else if (response?.data?.user?.paymentNumber?.includes("comp7")) {
+          setUser(response?.data?.user);
+          saveToLocalStorage("user", response?.data?.user);
+          router("/agent");
+        } else {
+          router("/");
+          alert("You are not a valid agent | Contact Admin");
         }
       }
     } catch (error) {
-      console.log("res",error)
-      setError(error?.response?.data?.error)
+      console.log("res", error);
+      setError(error?.response?.data?.error);
     }
-    
-    
   };
-console.log("error",error)
+  console.log("error", error);
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -79,8 +85,8 @@ console.log("error",error)
         <div className="bg-white py-8 px-4 shadow-md rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label 
-                htmlFor="username" 
+              <label
+                htmlFor="username"
                 className="block text-sm font-medium text-gray-700"
               >
                 Username
@@ -101,8 +107,8 @@ console.log("error",error)
             </div>
 
             <div>
-              <label 
-                htmlFor="password" 
+              <label
+                htmlFor="password"
                 className="block text-sm font-medium text-gray-700"
               >
                 Password
@@ -111,7 +117,7 @@ console.log("error",error)
                 <input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
                   required
                   value={formData.password}
@@ -141,8 +147,8 @@ console.log("error",error)
                   type="checkbox"
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label 
-                  htmlFor="remember-me" 
+                <label
+                  htmlFor="remember-me"
                   className="ml-2 block text-sm text-gray-700"
                 >
                   Remember me
@@ -150,8 +156,8 @@ console.log("error",error)
               </div>
 
               <div className="text-sm">
-                <a 
-                  href="#" 
+                <a
+                  href="#"
                   className="font-medium text-blue-600 hover:text-blue-500"
                 >
                   Forgot your password?
@@ -184,8 +190,6 @@ console.log("error",error)
                 </span>
               </div>
             </div>
-
-          
           </div>
         </div>
       </div>
@@ -194,7 +198,6 @@ console.log("error",error)
 };
 
 export default LoginPage;
-
 
 // axios('http://localhost:8083/students',{
 //   method: 'POST',
