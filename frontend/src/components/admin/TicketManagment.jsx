@@ -12,7 +12,7 @@ const TicketManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [tickets, setTickets] = useState([]);
 
-console.log("searc",searchTerm)
+// console.log("searc",searchTerm)
 console.log(tickets)
   const handleView = (ticket) => {
     setSelectedTicket(ticket);
@@ -22,18 +22,15 @@ console.log(tickets)
   useEffect(()=>{
     if(searchTerm){
 
-      const filteredTickets = ticketsALL.filter((ticket) => {
-        return (
-          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ticket.customerPaymentNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      })
-      let data = filteredTickets
-      console.log("data",data)
+     let filtered = ticketsALL.filter((item) =>
+        Object.values(item).some((value) =>
+          value?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
+        )
+      );
+      setTickets(filtered)
+      // let data = filtered
+      // console.log("data",data)
     }
-    setTickets(ticketsALL)
 
   },[searchTerm])
 
@@ -147,7 +144,7 @@ console.log(tickets)
         <div className="w-full">
           {/* search bar */}
           <input
-            type="text"
+            type="search"
             placeholder="Search..."
             className="w-full py-2 px-4 border border-gray-300 rounded-lg"
             value={searchTerm}
