@@ -30,6 +30,8 @@ console.log(tickets)
       setTickets(filtered)
       // let data = filtered
       // console.log("data",data)
+    }else{
+      setTickets(ticketsALL)
     }
 
   },[searchTerm])
