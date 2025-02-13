@@ -36,7 +36,7 @@ const Overview = ({
 
   const handleLogout = () => {
     setUser(null);
-    window.location.href = "/login";
+    window.location.href = "/go97/hello";
   };
 
   return (

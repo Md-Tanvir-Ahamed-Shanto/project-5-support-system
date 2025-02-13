@@ -11,30 +11,73 @@ const TicketManagement = () => {
   const [ticketsALL, setTicketsALL] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [tickets, setTickets] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
-// console.log("searc",searchTerm)
-console.log(tickets)
+  const handleSelectAll = (e) => {
+    const isChecked = e.target.checked;
+    setSelectAll(isChecked);
+    if (isChecked) {
+      // Select all ticket IDs
+      setSelectedIds(tickets.map((ticket) => ticket.id));
+    } else {
+      // Clear selection
+      setSelectedIds([]);
+    }
+  };
+
+  // Handle individual checkbox change
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prevSelectedIds) => {
+      if (prevSelectedIds.includes(id)) {
+        // Deselect the ID
+        return prevSelectedIds.filter((selectedId) => selectedId !== id);
+      } else {
+        // Select the ID
+        return [...prevSelectedIds, id];
+      }
+    });
+  };
+
+  console.log("selectedIds",selectedIds)
+// array bulk delete
+  const handleSelectedDelete = async () => {
+    try {
+      const response = await axios.delete(`${base_url}/admin/complaints`, {
+        data: { ids: selectedIds },
+      });
+      if (response.status === 200) {
+        alert(response.data.message);
+        fetchData();
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  }
+
+  // Check if all rows are selected
+  const areAllSelected =
+    tickets.length > 0 && selectedIds.length === tickets.length;
+
   const handleView = (ticket) => {
     setSelectedTicket(ticket);
     setIsModalOpen(true);
   };
 
-  useEffect(()=>{
-    if(searchTerm){
-
-     let filtered = ticketsALL.filter((item) =>
+  useEffect(() => {
+    if (searchTerm) {
+      let filtered = ticketsALL.filter((item) =>
         Object.values(item).some((value) =>
           value?.toString()?.toLowerCase()?.includes(searchTerm.toLowerCase())
         )
       );
-      setTickets(filtered)
+      setTickets(filtered);
       // let data = filtered
       // console.log("data",data)
-    }else{
-      setTickets(ticketsALL)
+    } else {
+      setTickets(ticketsALL);
     }
-
-  },[searchTerm])
+  }, [searchTerm]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -119,6 +162,14 @@ console.log(tickets)
     <div className="p-6 bg-white shadow-lg">
       <div className="bg-gray-100 w-full">
         <div className="flex relative items-center justify-center w-full p-3">
+        {user.role === "admin" && (
+            <button
+              onClick={()=> handleSelectedDelete(selectedIds)}
+              className="absolute left-0 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+            >
+              Delete Selected
+            </button>
+          )}
           <h2 className="text-2xl font-bold text-gray-800">
             Ticket Management
           </h2>
@@ -201,6 +252,13 @@ console.log(tickets)
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-100">
+              <th className="px-4 py-2">
+                <input
+                  type="checkbox"
+                  checked={selectAll || areAllSelected}
+                  onChange={handleSelectAll}
+                />
+              </th>
               <th className="p-2 border text-left">ID</th>
               <th className="p-2 border text-left">Customer Name</th>
               <th className="p-2 border text-left">Customer Payment</th>
@@ -217,6 +275,13 @@ console.log(tickets)
                     className={ticket.priority === "High" ? "bg-red-100" : ""}
                     key={ticket.id}
                   >
+                    <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(ticket.id)}
+                        onChange={() => handleCheckboxChange(ticket.id)}
+                      />
+                    </td>
                     <td className="p-2 border">{ticket.id}</td>
                     <td className="p-2 border">{ticket.name}</td>
                     <td className="p-2 border">

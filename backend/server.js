@@ -220,6 +220,21 @@ app.delete("/api/admin/complaints/:id", (req, res) => {
   });
 });
 
+// bulk delete complaints
+app.delete("/api/admin/complaints", (req, res) => {
+  const { ids } = req.body;
+
+  db.query("DELETE FROM complaints WHERE id IN (?)", [ids], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Complaint not found!" });
+    }
+
+    res.json({ message: "Complaint bulk deleted successfully!" });
+  });
+});
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
