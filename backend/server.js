@@ -167,7 +167,7 @@ app.delete("/api/admin/user/:id", (req, res) => {
 
 // 📢 Admin API: Get All Complaints
 app.get("/api/admin/complaints", (req, res) => {
-  db.query("SELECT * FROM complaints", (err, results) => {
+  db.query("SELECT * FROM complaints ORDER BY created_at DESC", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.status(200).json(results);
   });
