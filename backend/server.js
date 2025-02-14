@@ -15,17 +15,28 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
 
-const db = mysql.createConnection({
+const dbConfig = mysql.createConnection({
   host: config.DB_HOST,
   user: config.DB_USER,
   password: config.DB_PASSWORD,
-  database: config.DB_NAME
+  database: config.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10, // Maximum number of connections
+  queueLimit: 0,
 });
 
-db.connect(err => {
-  if (err) throw err;
-  console.log("MySQL Connected...");
+const db = mysql.createPool(dbConfig);
+
+// Test Connection to Database 1
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error("Database 1 Connection Error:", err);
+        return;
+    }
+    console.log("Connected to MySQL Database 1");
+    connection.release(); // Release connection back to the pool
 });
+
 
 // Configure multer storage
 const storage = multer.diskStorage({
