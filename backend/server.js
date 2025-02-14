@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
 
-const dbConfig = mysql.createConnection({
+const dbConfig = {
   host: config.DB_HOST,
   user: config.DB_USER,
   password: config.DB_PASSWORD,
@@ -23,7 +23,7 @@ const dbConfig = mysql.createConnection({
   waitForConnections: true,
   connectionLimit: 10, // Maximum number of connections
   queueLimit: 0,
-});
+};
 
 const db = mysql.createPool(dbConfig);
 
