@@ -4,8 +4,19 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const dotenv = require("dotenv");
-const cors = require("cors")
+const cors = require("cors");
+const webpush = require("web-push");
 const config = require("./config/config");
+
+// VAPID keys for web push
+const publicVapidKey = 'BNcgM-Mp0QTbDk5QG9S7m_IoCrMQQOVllovyH-fA7dNTpgX2ds4L0sAUtybJWwQIqankp2RkMObUTyKqcnGkvH8';
+const privateVapidKey = 'ZogiXLhZxpEu9djUAm18kTsk8iIZXl0YIpfILefQL2A';
+
+webpush.setVapidDetails(
+  'mailto:test@test.com',
+  publicVapidKey,
+  privateVapidKey
+);
 
 dotenv.config();
 const app = express();
@@ -14,6 +25,59 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
+
+// Subscribe endpoint
+app.post('/subscribe', (req, res) => {
+  const subscription = req.body;
+  
+  db.query(
+    'INSERT INTO push_subscriptions (subscription) VALUES (?)',
+    [JSON.stringify(subscription)],
+    (err, result) => {
+      if (err) {
+        console.error('Error storing subscription:', err);
+        return res.status(500).json({ error: 'Failed to store subscription' });
+      }
+      res.status(201).json({ message: 'Subscription added successfully' });
+    }
+  );
+});
+
+// Unsubscribe endpoint
+app.post('/unsubscribe', (req, res) => {
+  const { endpoint } = req.body;
+  
+  db.query(
+    'DELETE FROM push_subscriptions WHERE subscription LIKE ?',
+    [`%${endpoint}%`],
+    (err, result) => {
+      if (err) {
+        console.error('Error removing subscription:', err);
+        return res.status(500).json({ error: 'Failed to remove subscription' });
+      }
+      res.status(200).json({ message: 'Subscription removed successfully' });
+    }
+  );
+});
+
+// Helper function to send push notification
+const sendPushNotification = async (subscription, data) => {
+  try {
+    const parsedSubscription = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
+    await webpush.sendNotification(parsedSubscription, JSON.stringify(data));
+    return true;
+  } catch (error) {
+    console.error('Error sending push notification:', error);
+    if (error.statusCode === 410) {
+      // Subscription has expired or is invalid
+      db.query(
+        'DELETE FROM push_subscriptions WHERE subscription LIKE ?',
+        [`%${subscription.endpoint}%`]
+      );
+    }
+    return false;
+  }
+};
 
 const dbConfig = {
   host: config.DB_HOST,
@@ -101,6 +165,35 @@ app.post("/api/complaint", (req, res) => {
                       [name, customerPaymentNumber, companyPaymentNumber, contactNumber, subject, details, attachments, priority],
                       (err, result) => {
                           if (err) return res.status(500).json({ error: "Database error: " + err.message });
+
+                          // Send push notification for high priority complaints after successful insertion
+                          if (priority === "High") {
+                            const notificationData = {
+                              title: 'New High Priority Report',
+                              body: `A new high priority report has been submitted: ${subject}`,
+                              data: {
+                                complaintId: result.insertId,
+                                priority: priority,
+                                timestamp: new Date().toISOString()
+                              }
+                            };
+                            
+                            // Send to all subscribed agents
+                            db.query('SELECT subscription FROM push_subscriptions', async (err, results) => {
+                              if (err) {
+                                console.error('Error fetching subscriptions:', err);
+                                return;
+                              }
+                              
+                              for (const row of results) {
+                                try {
+                                  await sendPushNotification(row.subscription, notificationData);
+                                } catch (error) {
+                                  console.error('Failed to send notification:', error);
+                                }
+                              }
+                            });
+                          }
 
                           res.status(201).json({ message: "Complaint submitted successfully!", complaintId: result.insertId });
                       }

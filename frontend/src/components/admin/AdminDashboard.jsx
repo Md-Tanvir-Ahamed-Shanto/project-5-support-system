@@ -5,6 +5,7 @@ import TicketManagement from "./TicketManagment";
 import { UserContext } from "../../context/UserContext";
 import axios from "axios";
 import { base_url } from "../../config/config";
+import { subscribeToNotifications } from "../../services/notificationService";
 
 const AdminDashboard = () => {
   const { user } = useContext(UserContext);
@@ -22,9 +23,14 @@ try {
 } catch (error) {
   console.log('error',error)
 }  }
-  useEffect(()=>{
+  useEffect(() => {
     fetchData();
-},[])
+    // Subscribe to push notifications if user is an agent
+    if (user?.role === 'agent') {
+      console.log("called from admin dashboard")
+      subscribeToNotifications();
+    }
+  }, [user?.role])
   return (
     <div className="min-h-screen w-full flex bg-gray-100">
       {/* Sidebar */}

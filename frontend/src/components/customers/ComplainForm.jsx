@@ -32,6 +32,7 @@ const ComplaintForm = () => {
         return value && !/^01\d{9}$/.test(value)
           ? "সঠিক ১১-সংখ্যার নম্বর দিন যা 01 দিয়ে শুরু হয়"
           : "";
+      
       case "subject":
         return value.length < 2 && value.length > 0
           ? "বিষয় কমপক্ষে ২ অক্ষরের হতে হবে"
@@ -86,42 +87,54 @@ const ComplaintForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const newErrors = {};
+  
+    // Check for individual field validation
     Object.keys(formData).forEach((key) => {
       if (key !== "attachments") {
         const error = validateField(key, formData[key]);
         if (error) newErrors[key] = error;
       }
     });
-
+  
+    // Custom validation: customerPaymentNumber and companyPaymentNumber must be different
+    if (
+      formData.customerPaymentNumber &&
+      formData.companyPaymentNumber &&
+      formData.customerPaymentNumber === formData.companyPaymentNumber
+    ) {
+      const message = "যে নাম্বার থেকে টাকা পাঠিয়েছেন, এবং যে নাম্বারে পাঠিয়েছেন সেটা আলাদা হতে হবে।";
+      newErrors.customerPaymentNumber = message;
+      newErrors.companyPaymentNumber = message;
+    }
+  
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    // Use FormData to send file uploads
+  
+    // Prepare form data
     const formDataToSend = new FormData();
     Object.keys(formData).forEach((key) => {
       if (key === "attachments" && formData.attachments) {
-        formDataToSend.append("attachments", formData.attachments); // Append file
+        formDataToSend.append("attachments", formData.attachments);
       } else {
         formDataToSend.append(key, formData[key]);
       }
     });
-
+  
     try {
       const response = await axios.post(
         `${base_url}/complaint`,
         formDataToSend,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Important for file uploads
+            "Content-Type": "multipart/form-data",
           },
         }
       );
-
-      console.log("response", response);
+  
       if (response.status === 201) {
         alert("অভিযোগ সফলভাবে জমা দেওয়া হয়েছে!");
         setFormData({
@@ -133,14 +146,16 @@ const ComplaintForm = () => {
           details: "",
           attachments: null,
         });
-      } 
+        setErrors({});
+        setError(null);
+      }
     } catch (error) {
-      console.log("error",error?.response?.data?.error)
-      alert(error?.response?.data?.error)
-      // setErrors((prev) => ({ ...prev, n:  error?.response?.data?.error}));
-      setError(error?.response?.data?.error)
+      console.log("error", error?.response?.data?.error);
+      alert(error?.response?.data?.error);
+      setError(error?.response?.data?.error);
     }
   };
+  
   console.log("errorrs",errors)
   const getFilePreview = (file) => {
     if (file?.type.startsWith("image/")) {

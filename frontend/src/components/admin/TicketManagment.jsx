@@ -261,9 +261,9 @@ const TicketManagement = () => {
               </th>
               <th className="p-2 border text-left">ID</th>
               <th className="p-2 border text-left">Customer Name</th>
-              <th className="p-2 border text-left">Customer Payment</th>
-              <th className="p-2 border text-left">Our Payment</th>
-              <th className="p-2 border text-left">Subject</th>
+              <th className="p-2 border text-left">From BK (Customer)</th>
+              <th className="p-2 border text-left">Red BK</th>
+              <th className="p-2 border text-left">Ammout $</th>
               <th className="p-2 border text-left">Status</th>
               <th className="p-2 border text-left">Actions</th>
             </tr>
