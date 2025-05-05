@@ -317,6 +317,13 @@ const TicketManagement = () => {
                   .filter((ticket) => ticket.priority === activeTab)
                   .map((ticket) => (
                     <tr key={ticket.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(ticket.id)}
+                        onChange={() => handleCheckboxChange(ticket.id)}
+                      />
+                    </td>
                       <td className="p-2 border">{ticket.id}</td>
                       <td className="p-2 border">{ticket.name}</td>
                       <td className="p-2 border">
@@ -354,6 +361,13 @@ const TicketManagement = () => {
                       key={ticket.id}
                       className={ticket.priority === "High" ? "bg-red-100" : ""}
                     >
+                       <td className="px-4 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(ticket.id)}
+                        onChange={() => handleCheckboxChange(ticket.id)}
+                      />
+                    </td>
                       <td className="p-2 border">{ticket.id}</td>
                       <td className="p-2 border">{ticket.name}</td>
                       <td className="p-2 border">
