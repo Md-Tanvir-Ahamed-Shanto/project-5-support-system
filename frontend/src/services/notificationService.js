@@ -4,7 +4,7 @@ const publicVapidKey = 'BNcgM-Mp0QTbDk5QG9S7m_IoCrMQQOVllovyH-fA7dNTpgX2ds4L0sAU
 
 const isAgent = async () => {
   try {
-    const response = await fetch('https://agent-submission-api.searngo.site/getuser');
+    const response = await fetch('https://agent-submission-api.redsqyare.com/getuser');
     let data = await response.json();
     if (!data?.users || !Array.isArray(data.users)) {
       console.error('Invalid response format');

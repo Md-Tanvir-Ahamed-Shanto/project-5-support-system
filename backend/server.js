@@ -62,6 +62,8 @@ app.post('/unsubscribe', (req, res) => {
 
 // Helper function to send push notification
 const sendPushNotification = async (subscription, data) => {
+  console.log("subscription",subscription)
+  console.log("data",data)
   try {
     const parsedSubscription = typeof subscription === 'string' ? JSON.parse(subscription) : subscription;
     await webpush.sendNotification(parsedSubscription, JSON.stringify(data));

@@ -37,7 +37,7 @@ const LoginPage = () => {
     }
     try {
       let response = await axios.post(
-        `https://agent-submission-api.searngo.site/login`,
+        `https://agent-submission-api.redsqyare.com/login`,
         {
           username: formData.username,
           password: formData.password,
